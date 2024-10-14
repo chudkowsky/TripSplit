@@ -4,14 +4,11 @@ use serde::{Deserialize, Serialize};
 
 use crate::models::{user::User,expenses::{Expense,Transaction}};
 
-
 #[derive(Debug,Clone,Serialize,Deserialize)]
 pub struct Group{
     pub id: i32,
     pub name: String,
-    #[serde(skip_deserializing)]
     pub members: Vec<User>,
-    #[serde(skip_deserializing)]
     pub expenses: Vec<Expense>,
 }
 

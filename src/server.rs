@@ -1,7 +1,7 @@
 use std::net::SocketAddr;
 use std::sync::Arc;
 
-use axum::extract::State;
+use axum::extract::{Query, State};
 use axum::response::Response;
 use axum::Json;
 use axum::{
@@ -9,7 +9,7 @@ use axum::{
     Router,
 };
 use tokio::sync::Mutex;
-
+use crate::request::CreateGroupRequest;
 use crate::models::group::Group;
 use crate::models::user::User;
 
@@ -66,7 +66,7 @@ async fn get_users(State(app_state): State<AppState>) -> Response<String> {
 }
 async fn create_group(
     State(app_state): State<AppState>,
-    Json(group): Json<Group>,
+    Query(group): Query<CreateGroupRequest>,
 ) -> Response<String> {
     if app_state
         .groups
@@ -82,7 +82,16 @@ async fn create_group(
     } else {
         app_state.groups.lock().await.last().unwrap().id + 1
     };
-    let group = Group::new(id, group.name.as_str(), group.members.clone());
+    let members:Vec<User> = app_state
+        .users
+        .lock()
+        .await
+        .iter()
+        .filter(|u| group.members_id.contains(&u.id))
+        .cloned()
+        .collect(); 
+        let group = Group::new(id, group.name.as_str(),members);
+        
     println!("Group created succesfully: {:?}", group);
     app_state.groups.lock().await.push(group.clone());
     Response::new(format!("Group created succesfully: {:?}", group))
